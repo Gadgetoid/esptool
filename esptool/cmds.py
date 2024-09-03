@@ -356,6 +356,17 @@ def write_flash(esp, args):
         # Check if chip_id and min_rev in image are valid for the target in use
         for _, argfile in args.addr_filename:
             try:
+                if argfile.name.lower().endswith(".uf2") and argfile.read(3) == b"UF2":
+                    raise FatalError(
+                        f"{argfile.name} is not an {esp.CHIP_NAME} image. "
+                        "Flashing UF2 files is not supported."
+                    )
+            except OSError:
+                continue
+            finally:
+                argfile.seek(0)
+
+            try:
                 image = LoadFirmwareImage(esp.CHIP_NAME, argfile)
             except (FatalError, struct.error, RuntimeError):
                 continue
